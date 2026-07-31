@@ -25,10 +25,9 @@ jobs:
 
       - name: Run Scrape and Score Pipeline
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          MONGODB_DB_NAME: ${{ secrets.MONGODB_DB_NAME }}
-          MONGODB_COLLECTION_NAME: ${{ secrets.MONGODB_COLLECTION_NAME }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python main.py --scrape-and-score

@@ -9,8 +9,13 @@ class MongoDBClient:
 
     def __init__(self, connection_uri: Optional[str] = None, db_name: Optional[str] = None):
         self.uri = connection_uri or os.getenv("MONGODB_URI")
-        self.db_name = db_name or os.getenv("MONGODB_DB_NAME", "hermes_agent")
-        self.collection_name = os.getenv("MONGODB_COLLECTION_NAME", "issues")
+        
+        raw_db = (db_name or os.getenv("MONGODB_DB_NAME") or "").strip()
+        self.db_name = raw_db if raw_db else "hermes_agent"
+        
+        raw_coll = (os.getenv("MONGODB_COLLECTION_NAME") or "").strip()
+        self.collection_name = raw_coll if raw_coll else "issues"
+        
         self._client = None
         self._db = None
 
