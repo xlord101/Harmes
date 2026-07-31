@@ -11,11 +11,30 @@ if hasattr(sys.stderr, "reconfigure"):
 # Load environment variables
 load_dotenv()
 
-from src.agents.graph import create_hermes_graph
+from src.agents.graph import (
+    create_daily_scrape_graph,
+    create_weekly_publish_graph,
+    create_hermes_graph,
+)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Hermes Agent CLI - GitHub Issue Evaluator & LinkedIn Publisher")
+    parser = argparse.ArgumentParser(description="Hermes Agent CLI - GitHub Issue Evaluator & Publisher")
+    parser.add_argument(
+        "--scrape-and-score",
+        action="store_true",
+        help="Run daily scrape and score workflow (Phases 1 & 2)",
+    )
+    parser.add_argument(
+        "--generate-and-publish",
+        action="store_true",
+        help="Run weekly post generation workflow (Phase 3)",
+    )
+    parser.add_argument(
+        "--full-pipeline",
+        action="store_true",
+        help="Run full pipeline from scraping to post generation",
+    )
     parser.add_argument(
         "--repos",
         type=str,
@@ -43,16 +62,32 @@ def main():
         "post_draft": "",
     }
 
-    print("=== Executing Hermes Agent LangGraph Pipeline ===")
-    graph = create_hermes_graph()
-    result = graph.invoke(initial_state)
+    if args.scrape_and_score:
+        print("=== Running Daily Scrape & Score Workflow ===")
+        graph = create_daily_scrape_graph()
+        result = graph.invoke(initial_state)
+        print(f"Successfully scraped & evaluated {len(result.get('evaluated_issues', []))} issues.")
 
-    print("\nPipeline Finished Successfully!")
-    print(f"Total issues evaluated: {len(result.get('evaluated_issues', []))}")
-    print("\nGenerated LinkedIn Post Draft:")
-    print("--------------------------------------------------")
-    print(result.get("post_draft", ""))
-    print("--------------------------------------------------")
+    elif args.generate_and_publish:
+        print("=== Running Weekly Post Generation Workflow ===")
+        graph = create_weekly_publish_graph()
+        result = graph.invoke(initial_state)
+        print("\nGenerated LinkedIn Post Draft:")
+        print("--------------------------------------------------")
+        print(result.get("post_draft", ""))
+        print("--------------------------------------------------")
+
+    else:
+        print("=== Executing Hermes Agent Full Pipeline ===")
+        graph = create_hermes_graph()
+        result = graph.invoke(initial_state)
+
+        print("\nPipeline Finished Successfully!")
+        print(f"Total issues evaluated: {len(result.get('evaluated_issues', []))}")
+        print("\nGenerated LinkedIn Post Draft:")
+        print("--------------------------------------------------")
+        print(result.get("post_draft", ""))
+        print("--------------------------------------------------")
 
 
 if __name__ == "__main__":
