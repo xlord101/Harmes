@@ -1,0 +1,41 @@
+{
+  "description": "Curated list of beginner-friendly open-source repositories for CS students",
+  "categories": {
+    "web_development": [
+      "freeCodeCamp/freeCodeCamp",
+      "facebook/react",
+      "vercel/next.js",
+      "tailwindlabs/tailwindcss",
+      "lingdojo/kana-dojo"
+    ],
+    "python": [
+      "fastapi/fastapi",
+      "pallets/flask",
+      "django/django",
+      "psf/black",
+      "huggingface/transformers"
+    ],
+    "java_springboot": [
+      "spring-projects/spring-boot",
+      "iluwatar/java-design-patterns",
+      "elastic/elasticsearch"
+    ],
+    "c_cpp_systems": [
+      "godotengine/godot",
+      "opencv/opencv",
+      "electron/electron"
+    ],
+    "beginner_friendly": [
+      "firstcontributions/first-contributions",
+      "public-apis/public-apis",
+      "sindresorhus/awesome"
+    ]
+  },
+  "default_target_repos": [
+    "fastapi/fastapi",
+    "facebook/react",
+    "spring-projects/spring-boot",
+    "freeCodeCamp/freeCodeCamp",
+    "pallets/flask"
+  ]
+}
