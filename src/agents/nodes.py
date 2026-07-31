@@ -195,6 +195,14 @@ Return your response strictly as JSON with this schema:
     db_client = MongoDBClient()
     db_client.insert_or_update_issues(evaluated_issues)
 
+    # Send daily top 3 issues digest to Telegram
+    try:
+        from src.utils.telegram_api import TelegramClient
+        telegram = TelegramClient()
+        telegram.send_daily_digest(evaluated_issues, limit=3)
+    except Exception as e:
+        print(f"[Warning] Could not send Telegram notification: {e}")
+
     return {"evaluated_issues": evaluated_issues}
 
 
