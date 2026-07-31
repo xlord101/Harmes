@@ -27,7 +27,7 @@ class MongoDBClient:
             return None
         if self._client is None:
             try:
-                # Use certifi CA certificates bundle for Linux / Ubuntu SSL compatibility
+                # Primary: certifi CA bundle
                 self._client = MongoClient(
                     self.uri,
                     tlsCAFile=certifi.where(),
@@ -35,9 +35,14 @@ class MongoDBClient:
                 )
                 self._db = self._client[self.db_name]
             except Exception as e:
-                print(f"[Warning] PyMongo connection with certifi failed: {e}. Trying standard connection...")
+                print(f"[Warning] PyMongo connection with certifi failed: {e}. Trying TLS fallback...")
                 try:
-                    self._client = MongoClient(self.uri, serverSelectionTimeoutMS=10000)
+                    self._client = MongoClient(
+                        self.uri,
+                        tls=True,
+                        tlsAllowInvalidCertificates=True,
+                        serverSelectionTimeoutMS=10000
+                    )
                     self._db = self._client[self.db_name]
                 except Exception as ex:
                     print(f"[Error] Failed to connect to MongoDB: {ex}")

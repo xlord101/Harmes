@@ -24,7 +24,7 @@ class GitHubClient:
     ) -> List[Dict[str, Any]]:
         """
         Fetch recent 'good first issue' or beginner-friendly issues from target repositories
-        or global search if target_repos is empty.
+        or global search if target_repos is empty. Sorted by creation date descending.
         """
         issues_data = []
 
@@ -46,7 +46,8 @@ class GitHubClient:
 
         if self._github:
             repo = self._github.get_repo(repo_name)
-            open_issues = repo.get_issues(state="open", labels=["good first issue"])
+            # Sort by created date descending to fetch the newest, most relevant issues first
+            open_issues = repo.get_issues(state="open", labels=["good first issue"], sort="created", direction="desc")
             count = 0
             for issue in open_issues:
                 if issue.pull_request:
@@ -65,12 +66,12 @@ class GitHubClient:
                 if count >= limit_per_repo:
                     break
         else:
-            # Fallback to REST API
+            # Fallback to REST API sorted by created date descending
             headers = {"Accept": "application/vnd.github+json"}
             if self.token:
                 headers["Authorization"] = f"Bearer {self.token}"
 
-            url = f"https://api.github.com/repos/{repo_name}/issues?state=open&labels=good%20first%20issue&per_page={limit_per_repo}"
+            url = f"https://api.github.com/repos/{repo_name}/issues?state=open&labels=good%20first%20issue&sort=created&direction=desc&per_page={limit_per_repo}"
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 for item in response.json():

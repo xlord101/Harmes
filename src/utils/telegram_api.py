@@ -16,6 +16,11 @@ class TelegramClient:
             print("[Info] Telegram Bot credentials not configured. Skipping Telegram notification.")
             return {"status": "skipped"}
 
+        clean_token = self.bot_token.strip()
+        if clean_token.lower().startswith("bot"):
+            clean_token = clean_token[3:]
+        clean_chat_id = self.chat_id.strip()
+
         top_issues = issues[:limit]
         if not top_issues:
             return {"status": "empty"}
@@ -40,9 +45,9 @@ class TelegramClient:
         lines.append("💡 <i>Tip: Comment on the issue asking maintainers to assign it to you before writing code!</i>")
         message_text = "\n".join(lines)
 
-        telegram_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+        telegram_url = f"https://api.telegram.org/bot{clean_token}/sendMessage"
         payload = {
-            "chat_id": self.chat_id,
+            "chat_id": clean_chat_id,
             "text": message_text,
             "parse_mode": "HTML",
             "disable_web_page_preview": False
@@ -55,6 +60,7 @@ class TelegramClient:
                 return {"status": "success"}
             else:
                 print(f"Telegram API Error ({response.status_code}): {response.text}")
+                print(f"[Debug Tip] Verify TELEGRAM_BOT_TOKEN in GitHub Secrets (e.g., 7123456789:AAFg...) and TELEGRAM_CHAT_ID.")
                 return {"status": "error", "error": response.text}
         except Exception as e:
             print(f"Failed to send Telegram message: {e}")
