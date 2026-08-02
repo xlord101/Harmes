@@ -32,10 +32,16 @@
     ]
   },
   "default_target_repos": [
-    "fastapi/fastapi",
-    "facebook/react",
-    "spring-projects/spring-boot",
     "freeCodeCamp/freeCodeCamp",
-    "pallets/flask"
+    "vercel/next.js",
+    "tailwindlabs/tailwindcss",
+    "fastapi/fastapi",
+    "django/django",
+    "huggingface/transformers",
+    "spring-projects/spring-boot",
+    "godotengine/godot",
+    "firstcontributions/first-contributions",
+    "public-apis/public-apis",
+    "facebook/react"
   ]
 }

@@ -24,58 +24,56 @@ class GitHubClient:
     ) -> List[Dict[str, Any]]:
         """
         Fetch recent 'good first issue' or beginner-friendly issues from target repositories
-        or global search if target_repos is empty. Sorted by creation date descending.
+        or global search if target_repos is empty or yields fewer than limit issues.
+        Sorted by creation date descending.
         """
         issues_data = []
+        seen_ids = set()
 
         if target_repos:
             for repo_name in target_repos:
+                if len(issues_data) >= limit:
+                    break
                 try:
                     repo_issues = self._fetch_issues_for_repo(repo_name, limit_per_repo=5)
-                    issues_data.extend(repo_issues)
+                    for issue in repo_issues:
+                        if issue["id"] not in seen_ids:
+                            seen_ids.add(issue["id"])
+                            issues_data.append(issue)
                 except Exception as e:
                     print(f"Error fetching issues for repo {repo_name}: {e}")
-        else:
-            # General search across open source projects
-            issues_data = self._search_issues_global(limit=limit)
+
+        # If target repos yielded fewer issues than limit, supplement with fresh issues from global search
+        if len(issues_data) < limit:
+            needed = limit - len(issues_data)
+            print(f"[Info] Target repos yielded {len(issues_data)} issues. Supplementing with fresh issues from global search...")
+            global_issues = self._search_issues_global(limit=needed * 2)
+            for issue in global_issues:
+                if len(issues_data) >= limit:
+                    break
+                if issue["id"] not in seen_ids:
+                    seen_ids.add(issue["id"])
+                    issues_data.append(issue)
 
         return issues_data
 
     def _fetch_issues_for_repo(self, repo_name: str, limit_per_repo: int = 5) -> List[Dict[str, Any]]:
         issues_data = []
+        target_labels = {"good first issue", "good-first-issue", "help wanted", "easy", "beginner", "starter", "first-timers-only"}
+        headers = {"Accept": "application/vnd.github+json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
 
-        if self._github:
-            repo = self._github.get_repo(repo_name)
-            # Sort by created date descending to fetch the newest, most relevant issues first
-            open_issues = repo.get_issues(state="open", labels=["good first issue"], sort="created", direction="desc")
-            count = 0
-            for issue in open_issues:
-                if issue.pull_request:
-                    continue
-                issues_data.append({
-                    "id": str(issue.id),
-                    "title": issue.title,
-                    "url": issue.html_url,
-                    "description": issue.body or "",
-                    "repository": repo_name,
-                    "labels": [label.name for label in issue.labels],
-                    "created_at": issue.created_at.isoformat(),
-                    "comments_count": issue.comments,
-                })
-                count += 1
-                if count >= limit_per_repo:
-                    break
-        else:
-            # Fallback to REST API sorted by created date descending
-            headers = {"Accept": "application/vnd.github+json"}
-            if self.token:
-                headers["Authorization"] = f"Bearer {self.token}"
-
-            url = f"https://api.github.com/repos/{repo_name}/issues?state=open&labels=good%20first%20issue&sort=created&direction=desc&per_page={limit_per_repo}"
+        try:
+            url = f"https://api.github.com/repos/{repo_name}/issues?state=open&sort=created&direction=desc&per_page=30"
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
+                count = 0
                 for item in response.json():
                     if "pull_request" in item:
+                        continue
+                    issue_labels = {l["name"].lower() for l in item.get("labels", [])}
+                    if not issue_labels.intersection(target_labels):
                         continue
                     issues_data.append({
                         "id": str(item["id"]),
@@ -87,8 +85,13 @@ class GitHubClient:
                         "created_at": item.get("created_at"),
                         "comments_count": item.get("comments", 0),
                     })
+                    count += 1
+                    if count >= limit_per_repo:
+                        break
             else:
-                print(f"GitHub API REST error for {repo_name}: {response.status_code} {response.text}")
+                print(f"GitHub API REST warning for {repo_name}: {response.status_code}")
+        except Exception as e:
+            print(f"Error fetching issues for {repo_name}: {e}")
 
         return issues_data
 
@@ -98,11 +101,16 @@ class GitHubClient:
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
-        query = 'label:"good first issue" state:open is:issue'
-        url = f"https://api.github.com/search/issues?q={requests.utils.quote(query)}&sort=created&order=desc&per_page={limit}"
+        url = "https://api.github.com/search/issues"
+        params = {
+            "q": 'is:issue state:open label:"good first issue" no:assignee',
+            "sort": "created",
+            "order": "desc",
+            "per_page": min(100, limit * 2)
+        }
 
         try:
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, params=params, timeout=10)
             if response.status_code == 200:
                 items = response.json().get("items", [])
                 for item in items:

@@ -18,7 +18,8 @@ def get_llm():
             return ChatGoogleGenerativeAI(
                 model="gemini-2.0-flash",
                 google_api_key=gemini_key,
-                temperature=0.2
+                temperature=0.2,
+                max_retries=1
             )
         except Exception as e:
             print(f"[Warning] Could not initialize ChatGoogleGenerativeAI: {e}")
