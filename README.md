@@ -1,8 +1,8 @@
-# 🚀 Hermes Agent: Open-Source Issue Evaluator & Publisher
+# 🚀 Hermes Agent: Open-Source Issue Evaluator & Weekly Digest Generator
 
 **Hermes Agent** is a fully automated, AI-powered agentic pipeline designed to aggregate, score, and deliver high-quality open-source *"Good First Issues"* for developers and CS students. 
 
-Built with **Python**, **LangGraph**, **MongoDB Atlas**, **PyGithub**, and **Telegram Bot API**, it automates daily issue discovery directly to your phone and generates curated weekly LinkedIn digests.
+Built with **Python**, **LangGraph**, **MongoDB Atlas**, **PyGithub**, and **Telegram Bot API**, it automates daily issue discovery directly to your phone and generates curated weekly LinkedIn post digests ready for publishing.
 
 ---
 
@@ -13,6 +13,7 @@ Built with **Python**, **LangGraph**, **MongoDB Atlas**, **PyGithub**, and **Tel
 - 💾 **MongoDB Atlas Persistence**: Automatically upserts and tracks evaluated issues with deduplication and publication status flags.
 - 🧠 **Dual Intelligence Engine**: Powered by Google Gemini 2.0 / Pro with a built-in zero-latency rule-based heuristic fallback.
 - 🔄 **Fresh Issue Discovery**: Queries GitHub issues sorted by creation date descending (`sort="created", direction="desc"`) to ensure you always get active, recent tasks.
+- 📝 **Weekly LinkedIn Digest Generator**: Aggregates the top 5 highest-scoring issues of the week into a formatted, ready-to-publish LinkedIn post draft.
 - ☁️ **Zero-Cost Automation**: Automated via GitHub Actions daily and weekly cron jobs.
 
 ---
@@ -49,7 +50,7 @@ Built with **Python**, **LangGraph**, **MongoDB Atlas**, **PyGithub**, and **Tel
                                        │
                                        ▼
                      ┌───────────────────────────────────┐
-                     │  3. Generator & Publisher Node    │
+                     │  3. Generator & Digest Node       │
                      │ Creates Weekly Top 5 LinkedIn Post│
                      └───────────────────────────────────┘
 ```
@@ -62,7 +63,7 @@ Built with **Python**, **LangGraph**, **MongoDB Atlas**, **PyGithub**, and **Tel
 - **Database**: MongoDB Atlas (PyMongo)
 - **Scraper**: PyGithub & GitHub REST API
 - **AI Models**: Google Gemini 2.0 / Pro (`langchain-google-genai`), OpenAI (`langchain-openai`)
-- **Notifications**: Telegram Bot API, LinkedIn REST API
+- **Notifications**: Telegram Bot API
 - **CI/CD**: GitHub Actions
 
 ---
