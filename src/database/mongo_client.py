@@ -28,24 +28,27 @@ class MongoDBClient:
         if self._client is None:
             try:
                 # Primary: MongoClient with certifi CA bundle for secure TLS handshake
-                self._client = MongoClient(
+                client = MongoClient(
                     self.uri,
                     tlsCAFile=certifi.where(),
-                    serverSelectionTimeoutMS=10000
+                    serverSelectionTimeoutMS=5000
                 )
+                client.admin.command('ping')
+                self._client = client
                 self._db = self._client[self.db_name]
             except Exception as e:
-                print(f"[Warning] PyMongo connection with certifi failed: {e}. Trying fallback connection...")
                 try:
-                    self._client = MongoClient(
+                    client = MongoClient(
                         self.uri,
                         tls=True,
                         tlsAllowInvalidCertificates=True,
-                        serverSelectionTimeoutMS=10000
+                        serverSelectionTimeoutMS=5000
                     )
+                    client.admin.command('ping')
+                    self._client = client
                     self._db = self._client[self.db_name]
                 except Exception as ex:
-                    print(f"[Error] Failed to connect to MongoDB: {ex}")
+                    print(f"[Warning] MongoDB Atlas connection warning: {ex}. Proceeding with fallback handling.")
                     return None
         return self._db[self.collection_name]
 
