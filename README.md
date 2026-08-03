@@ -85,7 +85,6 @@ hermes-agent/
 │   │   └── mongo_client.py       # MongoDB Atlas client manager
 │   └── utils/
 │       ├── github_api.py         # GitHub API scraper client
-│       ├── linkedin_api.py       # LinkedIn publisher client
 │       └── telegram_api.py       # Telegram bot daily digest client
 ├── repos.json                    # Curated list of target GitHub repositories
 ├── requirements.txt              # Environment dependencies

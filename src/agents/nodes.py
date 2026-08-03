@@ -4,7 +4,6 @@ from typing import Dict, Any, List
 from src.agents.state import AgentState, Issue
 from src.utils.github_api import GitHubClient
 from src.database.mongo_client import MongoDBClient
-from src.utils.linkedin_api import LinkedInClient
 
 # Import LangChain LLM wrappers
 from langchain_core.prompts import PromptTemplate
