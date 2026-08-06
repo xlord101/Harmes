@@ -1,5 +1,82 @@
 {
-  "description": "Curated list of beginner-friendly open-source repositories for CS students",
+  "description": "Curated list of open-source repositories, difficulty levels, and tech stacks for Hermes Agent",
+  "difficulty_levels": [
+    "good first issue",
+    "good-first-issue",
+    "help wanted",
+    "easy",
+    "beginner",
+    "starter",
+    "first-timers-only",
+    "low-hanging-fruit",
+    "medium",
+    "contributions-welcome"
+  ],
+  "tech_stacks": {
+    "Python": [
+      "python",
+      "django",
+      "fastapi",
+      "flask",
+      "pytorch",
+      "transformers"
+    ],
+    "React/Next.js": [
+      "react",
+      "next.js",
+      "nextjs",
+      "jsx",
+      "tsx"
+    ],
+    "TypeScript/JavaScript": [
+      "typescript",
+      "javascript",
+      "node",
+      "nodejs",
+      "express",
+      "vue",
+      "svelte"
+    ],
+    "Tailwind/CSS": [
+      "tailwind",
+      "tailwindcss",
+      "css",
+      "scss"
+    ],
+    "Java/Spring": [
+      "java",
+      "spring",
+      "spring-boot",
+      "maven",
+      "gradle"
+    ],
+    "C/C++/Systems": [
+      "c++",
+      "cpp",
+      "c",
+      "godot",
+      "opencv",
+      "electron"
+    ],
+    "Go": [
+      "go",
+      "golang",
+      "gin"
+    ],
+    "Rust": [
+      "rust",
+      "cargo",
+      "actix",
+      "tokio"
+    ],
+    "SQL/Database": [
+      "sql",
+      "mysql",
+      "postgres",
+      "postgresql",
+      "mongodb"
+    ]
+  },
   "categories": {
     "web_development": [
       "freeCodeCamp/freeCodeCamp",
@@ -24,6 +101,12 @@
       "godotengine/godot",
       "opencv/opencv",
       "electron/electron"
+    ],
+    "go_rust_systems": [
+      "golang/go",
+      "gin-gonic/gin",
+      "rust-lang/rust",
+      "tokio-rs/tokio"
     ],
     "beginner_friendly": [
       "firstcontributions/first-contributions",
