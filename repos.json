@@ -115,16 +115,5 @@
     ]
   },
   "default_target_repos": [
-    "freeCodeCamp/freeCodeCamp",
-    "vercel/next.js",
-    "tailwindlabs/tailwindcss",
-    "fastapi/fastapi",
-    "django/django",
-    "huggingface/transformers",
-    "spring-projects/spring-boot",
-    "godotengine/godot",
-    "firstcontributions/first-contributions",
-    "public-apis/public-apis",
-    "facebook/react"
   ]
 }
