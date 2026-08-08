@@ -6,13 +6,28 @@
     "help wanted",
     "easy",
     "beginner",
-    "starter",
-    "first-timers-only",
-    "low-hanging-fruit",
     "medium",
     "contributions-welcome"
   ],
   "tech_stacks": {
+    "AI_Engineering_RAG_Agents": [
+      "ai",
+      "rag",
+      "agent",
+      "langchain",
+      "llamaindex",
+      "llm",
+      "vector",
+      "qdrant",
+      "chroma",
+      "pinecone",
+      "openai",
+      "gemini",
+      "huggingface",
+      "pytorch",
+      "transformers",
+      "fastapi"
+    ],
     "Python": [
       "python",
       "django",
@@ -33,85 +48,42 @@
       "javascript",
       "node",
       "nodejs",
-      "express",
-      "vue",
-      "svelte"
+      "express"
     ],
-    "Tailwind/CSS": [
-      "tailwind",
-      "tailwindcss",
-      "css",
-      "scss"
-    ],
-    "Java/Spring": [
-      "java",
-      "spring",
-      "spring-boot",
-      "maven",
-      "gradle"
-    ],
-    "C/C++/Systems": [
-      "c++",
-      "cpp",
-      "c",
-      "godot",
-      "opencv",
-      "electron"
-    ],
-    "Go": [
+    "Go/Rust": [
       "go",
       "golang",
-      "gin"
-    ],
-    "Rust": [
       "rust",
-      "cargo",
-      "actix",
       "tokio"
     ],
-    "SQL/Database": [
+    "Database": [
       "sql",
-      "mysql",
       "postgres",
       "postgresql",
-      "mongodb"
+      "mongodb",
+      "redis"
     ]
   },
   "categories": {
+    "ai_engineering": [
+      "langchain-ai/langchain",
+      "run-llama/llama_index",
+      "huggingface/transformers",
+      "huggingface/diffusers",
+      "fastapi/fastapi",
+      "vllm-project/vllm",
+      "crewAIInc/crewAI"
+    ],
     "web_development": [
-      "freeCodeCamp/freeCodeCamp",
       "facebook/react",
       "vercel/next.js",
-      "tailwindlabs/tailwindcss",
-      "lingdojo/kana-dojo"
+      "tailwindlabs/tailwindcss"
     ],
     "python": [
       "fastapi/fastapi",
       "pallets/flask",
       "django/django",
-      "psf/black",
-      "huggingface/transformers"
-    ],
-    "java_springboot": [
-      "spring-projects/spring-boot",
-      "iluwatar/java-design-patterns",
-      "elastic/elasticsearch"
-    ],
-    "c_cpp_systems": [
-      "godotengine/godot",
-      "opencv/opencv",
-      "electron/electron"
-    ],
-    "go_rust_systems": [
-      "golang/go",
-      "gin-gonic/gin",
-      "rust-lang/rust",
-      "tokio-rs/tokio"
-    ],
-    "beginner_friendly": [
-      "firstcontributions/first-contributions",
-      "public-apis/public-apis",
-      "sindresorhus/awesome"
+      "psf/black"
     ]
   },
   "default_target_repos": []

@@ -47,6 +47,17 @@ def _load_repos_config() -> dict:
     return {}
 
 
+DUMMY_TITLE_KEYWORDS = [
+    "anime quote", "trivia question", "grammar point",
+    "typo in readme", "update readme line", "bump version", "translation", "add note line", "community note"
+]
+
+def _is_dummy_issue(item: dict) -> bool:
+    """Filter out non-engineering trivia, quote, or typo-only issues."""
+    title = (item.get("title") or "").lower()
+    return any(kw in title for kw in DUMMY_TITLE_KEYWORDS)
+
+
 def _extract_tech_stack_heuristics(item: dict) -> List[str]:
     """Extract technology stack keywords from issue title/description based on repos.json config."""
     text = (item.get("title", "") + " " + (item.get("description") or "")).lower()
@@ -60,24 +71,30 @@ def _extract_tech_stack_heuristics(item: dict) -> List[str]:
                 found.append(display_name)
     else:
         known = [
+            ("AI Engineering/RAG/Agents", "rag"), ("AI Engineering/RAG/Agents", "agent"),
+            ("AI Engineering/RAG/Agents", "langchain"), ("AI Engineering/RAG/Agents", "llamaindex"),
+            ("AI Engineering/RAG/Agents", "llm"), ("PyTorch/Transformers", "pytorch"),
             ("React", "react"), ("Python", "python"), ("FastAPI", "fastapi"),
             ("Java", "java"), ("Spring Boot", "spring"), ("Tailwind CSS", "tailwind"),
             ("Vite", "vite"), ("MySQL", "mysql"), ("TypeScript", "typescript"),
             ("Node.js", "node"), ("Next.js", "next"), ("Go", "golang"), ("Rust", "rust")
         ]
-        found = [display_name for display_name, kw in known if kw in text]
+        found = list(dict.fromkeys([display_name for display_name, kw in known if kw in text]))
 
     return found if found else ["General Tech"]
 
 
 def _fallback_heuristic_score(item: dict) -> int:
     """Rule-based heuristic scoring matrix (1-100 scale)."""
+    if _is_dummy_issue(item):
+        return 10  # Heavily downscore dummy quote/trivia issues
+
     text = (item.get("title", "") + " " + (item.get("description") or "")).lower()
     labels = [l.lower() for l in item.get("labels", [])]
 
     config = _load_repos_config()
     configured_stacks = config.get("tech_stacks", {})
-    configured_difficulties = [d.lower() for d in config.get("difficulty_levels", ["good first issue", "easy", "beginner", "help wanted"])]
+    configured_difficulties = [d.lower() for d in config.get("difficulty_levels", ["good first issue", "easy", "beginner", "help wanted", "medium"])]
 
     tech_score = 0
     all_keywords = []
@@ -85,11 +102,16 @@ def _fallback_heuristic_score(item: dict) -> int:
         for keywords in configured_stacks.values():
             all_keywords.extend([kw.lower() for kw in keywords])
     else:
-        all_keywords = ["react", "vite", "tailwind", "java", "spring", "fastapi", "mysql", "python", "typescript", "next", "node", "go", "rust"]
+        all_keywords = ["react", "vite", "tailwind", "java", "spring", "fastapi", "mysql", "python", "typescript", "next", "node", "go", "rust", "ai", "rag", "agent", "langchain", "llamaindex", "llm", "pytorch"]
 
     matched_techs = [kw for kw in set(all_keywords) if kw in text]
     if matched_techs:
         tech_score = min(40, len(matched_techs) * 15 + 10)
+
+    # Extra bonus for AI Engineering, RAG & Agents
+    ai_keywords = ["ai", "rag", "agent", "langchain", "llamaindex", "llm", "qdrant", "pinecone", "chroma", "vector"]
+    if any(kw in text for kw in ai_keywords):
+        tech_score = min(40, tech_score + 10)
 
     clarity_score = 10
     desc_len = len(item.get("description") or "")
