@@ -26,8 +26,8 @@ class MongoDBClient:
             print("[Warning] MONGODB_URI not configured. Database operations will be skipped or simulated.")
             return None
         if self._client is None:
+            # Attempt 1: Standard certifi CA bundle
             try:
-                # Primary: MongoClient with certifi CA bundle for secure TLS handshake
                 client = MongoClient(
                     self.uri,
                     tlsCAFile=certifi.where(),
@@ -37,11 +37,13 @@ class MongoDBClient:
                 self._client = client
                 self._db = self._client[self.db_name]
             except Exception as e:
+                # Attempt 2: Explicit tlsInsecure + tlsAllowInvalidCertificates for OpenSSL 3.0 / Linux cloud runners
                 try:
                     client = MongoClient(
                         self.uri,
                         tls=True,
                         tlsAllowInvalidCertificates=True,
+                        tlsInsecure=True,
                         serverSelectionTimeoutMS=5000
                     )
                     client.admin.command('ping')
@@ -99,7 +101,7 @@ class MongoDBClient:
         try:
             coll = self.collection
             if coll is None:
-                print("[Simulated] Returning empty/mock list of unpublished issues.")
+                print("[Simulated] Returning empty list of unpublished issues.")
                 return []
 
             cursor = coll.find({"is_published": False}).sort("evaluation_score", -1).limit(limit)

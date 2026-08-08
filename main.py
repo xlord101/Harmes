@@ -41,26 +41,63 @@ def main():
         default="",
         help="Comma-separated list of target GitHub repositories (e.g., 'facebook/react,fastapi/fastapi')",
     )
+    parser.add_argument(
+        "--all-categories",
+        action="store_true",
+        help="Scrape all repositories across all categories in repos.json instead of just default target repos",
+    )
+    parser.add_argument(
+        "--global-search",
+        action="store_true",
+        help="Run global GitHub search for beginner issues across all open source projects",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=25,
+        help="Maximum number of raw issues to scrape (default: 25)",
+    )
+    parser.add_argument(
+        "--difficulty",
+        type=str,
+        default="",
+        help="Comma-separated list of target difficulty labels (e.g. 'good first issue,help wanted,easy')",
+    )
 
     args = parser.parse_args()
     target_repos = [r.strip() for r in args.repos.split(",") if r.strip()]
+    difficulty_levels = [d.strip() for d in args.difficulty.split(",") if d.strip()]
 
     if not target_repos:
         try:
             import json
             with open("repos.json", "r", encoding="utf-8") as f:
                 repos_data = json.load(f)
-                target_repos = repos_data.get("default_target_repos", [])
-                print(f"[Config] Loaded default target repositories from repos.json: {target_repos}")
+                if args.all_categories:
+                    all_repos = set()
+                    for cat_name, repos in repos_data.get("categories", {}).items():
+                        all_repos.update(repos)
+                    target_repos = list(all_repos)
+                    print(f"[Config] Loaded {len(target_repos)} repositories across ALL categories from repos.json.")
+                else:
+                    target_repos = repos_data.get("default_target_repos", [])
+                    print(f"[Config] Loaded default target repositories from repos.json: {target_repos}")
+
+                if not difficulty_levels:
+                    difficulty_levels = repos_data.get("difficulty_levels", [])
         except Exception as e:
             print(f"[Warning] Could not load repos.json: {e}")
 
     initial_state = {
         "target_repos": target_repos,
+        "limit": args.limit,
+        "difficulty_levels": difficulty_levels,
+        "global_search_first": args.global_search,
         "raw_issues": [],
         "evaluated_issues": [],
         "post_draft": "",
     }
+
 
     if args.scrape_and_score:
         print("=== Running Daily Scrape & Score Workflow ===")

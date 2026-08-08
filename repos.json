@@ -114,6 +114,5 @@
       "sindresorhus/awesome"
     ]
   },
-  "default_target_repos": [
-  ]
+  "default_target_repos": []
 }

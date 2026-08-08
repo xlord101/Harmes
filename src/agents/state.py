@@ -1,4 +1,4 @@
-from typing import TypedDict, List
+from typing import TypedDict, List, Optional
 from pydantic import BaseModel, Field
 
 class Issue(BaseModel):
@@ -12,8 +12,12 @@ class Issue(BaseModel):
     score: int = 0
     is_published: bool = False
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     target_repos: List[str]
+    limit: int
+    difficulty_levels: List[str]
+    global_search_first: bool
     raw_issues: List[dict]
     evaluated_issues: List[Issue]
     post_draft: str
+

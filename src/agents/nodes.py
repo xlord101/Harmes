@@ -35,23 +35,38 @@ def get_llm():
     return None
 
 
+def _load_repos_config() -> dict:
+    """Helper to load repos.json configuration."""
+    try:
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "repos.json")
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[Warning] Could not load repos.json in nodes.py: {e}")
+    return {}
+
+
 def _extract_tech_stack_heuristics(item: dict) -> List[str]:
-    """Extract technology stack keywords from issue title/description."""
+    """Extract technology stack keywords from issue title/description based on repos.json config."""
     text = (item.get("title", "") + " " + (item.get("description") or "")).lower()
-    known = [
-        ("React", "react"),
-        ("Python", "python"),
-        ("FastAPI", "fastapi"),
-        ("Java", "java"),
-        ("Spring Boot", "spring"),
-        ("Tailwind CSS", "tailwind"),
-        ("Vite", "vite"),
-        ("MySQL", "mysql"),
-        ("TypeScript", "typescript"),
-        ("Node.js", "node"),
-        ("Next.js", "next")
-    ]
-    found = [display_name for display_name, kw in known if kw in text]
+    config = _load_repos_config()
+    configured_stacks = config.get("tech_stacks", {})
+
+    found = []
+    if configured_stacks:
+        for display_name, keywords in configured_stacks.items():
+            if any(kw.lower() in text for kw in keywords):
+                found.append(display_name)
+    else:
+        known = [
+            ("React", "react"), ("Python", "python"), ("FastAPI", "fastapi"),
+            ("Java", "java"), ("Spring Boot", "spring"), ("Tailwind CSS", "tailwind"),
+            ("Vite", "vite"), ("MySQL", "mysql"), ("TypeScript", "typescript"),
+            ("Node.js", "node"), ("Next.js", "next"), ("Go", "golang"), ("Rust", "rust")
+        ]
+        found = [display_name for display_name, kw in known if kw in text]
+
     return found if found else ["General Tech"]
 
 
@@ -60,9 +75,19 @@ def _fallback_heuristic_score(item: dict) -> int:
     text = (item.get("title", "") + " " + (item.get("description") or "")).lower()
     labels = [l.lower() for l in item.get("labels", [])]
 
+    config = _load_repos_config()
+    configured_stacks = config.get("tech_stacks", {})
+    configured_difficulties = [d.lower() for d in config.get("difficulty_levels", ["good first issue", "easy", "beginner", "help wanted"])]
+
     tech_score = 0
-    core_techs = ["react", "vite", "tailwind", "java", "spring", "fastapi", "mysql", "python", "typescript", "next", "node"]
-    matched_techs = [tech for tech in core_techs if tech in text]
+    all_keywords = []
+    if configured_stacks:
+        for keywords in configured_stacks.values():
+            all_keywords.extend([kw.lower() for kw in keywords])
+    else:
+        all_keywords = ["react", "vite", "tailwind", "java", "spring", "fastapi", "mysql", "python", "typescript", "next", "node", "go", "rust"]
+
+    matched_techs = [kw for kw in set(all_keywords) if kw in text]
     if matched_techs:
         tech_score = min(40, len(matched_techs) * 15 + 10)
 
@@ -74,7 +99,7 @@ def _fallback_heuristic_score(item: dict) -> int:
         clarity_score += 5
 
     setup_score = 5
-    if any(l in labels for l in ["good first issue", "easy", "beginner", "help wanted"]):
+    if any(l in labels for l in configured_difficulties):
         setup_score += 10
 
     activity_score = 5
@@ -112,13 +137,27 @@ def _template_linkedin_post(issues: List[dict]) -> str:
 
 
 def scrape_github_issues(state: AgentState) -> dict:
-    """Scrape raw issues from target GitHub repositories."""
+    """Scrape raw issues from target GitHub repositories or global search."""
     print("--- [Scraper Node] Fetching issues from GitHub ---")
     target_repos = state.get("target_repos", [])
+    limit = state.get("limit", 25)
+    difficulty_levels = state.get("difficulty_levels", [])
+    global_search_first = state.get("global_search_first", False)
+
+    if not difficulty_levels:
+        config = _load_repos_config()
+        difficulty_levels = config.get("difficulty_levels", [])
+
     client = GitHubClient()
-    raw_issues = client.fetch_good_first_issues(target_repos=target_repos, limit=15)
+    raw_issues = client.fetch_good_first_issues(
+        target_repos=target_repos,
+        limit=limit,
+        difficulty_levels=difficulty_levels,
+        global_search_first=global_search_first
+    )
     print(f"Scraped {len(raw_issues)} raw issues.")
     return {"raw_issues": raw_issues}
+
 
 
 def evaluate_and_score_issues(state: AgentState) -> dict:
@@ -215,6 +254,16 @@ def generate_linkedin_post(state: AgentState) -> dict:
     if not top_issues_docs:
         eval_issues = state.get("evaluated_issues", [])
         top_issues_docs = [issue.model_dump() for issue in eval_issues[:5]]
+
+    if not top_issues_docs:
+        print("[Info] No unpublished issues found in DB or State. Executing live scrape & evaluate fallback...")
+        try:
+            scraped_state = scrape_github_issues(state)
+            eval_state = evaluate_and_score_issues(scraped_state)
+            eval_issues = eval_state.get("evaluated_issues", [])
+            top_issues_docs = [issue.model_dump() for issue in eval_issues[:5]]
+        except Exception as ex:
+            print(f"[Warning] Live fallback scraping failed: {ex}")
 
     if not top_issues_docs:
         draft = "🚀 Weekly Good First Issues Digest: No new issues available this week! Stay tuned!"
