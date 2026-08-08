@@ -332,4 +332,12 @@ Guidelines:
         draft = _template_linkedin_post(top_issues_docs)
 
     print("Draft generated successfully.")
+
+    # Send generated weekly draft to Telegram chat
+    try:
+        telegram = TelegramClient()
+        telegram.send_message(f"📝 Weekly LinkedIn Post Draft Ready:\n\n{draft}")
+    except Exception as ex:
+        print(f"[Warning] Failed to send draft to Telegram: {ex}")
+
     return {"post_draft": draft}

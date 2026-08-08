@@ -4,11 +4,41 @@ from typing import List, Dict, Any, Optional
 from src.agents.state import Issue
 
 class TelegramClient:
-    """Utility class to send daily issue notifications to a Telegram chat."""
+    """Utility class to send issue notifications and drafts to Telegram."""
 
     def __init__(self, bot_token: Optional[str] = None, chat_id: Optional[str] = None):
         self.bot_token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN")
         self.chat_id = chat_id or os.getenv("TELEGRAM_CHAT_ID")
+
+    def send_message(self, text: str) -> Dict[str, Any]:
+        """Send a raw text message to Telegram."""
+        if not self.bot_token or not self.chat_id:
+            print("[Info] Telegram Bot credentials not configured. Skipping Telegram notification.")
+            return {"status": "skipped"}
+
+        clean_token = self.bot_token.strip()
+        if clean_token.lower().startswith("bot"):
+            clean_token = clean_token[3:]
+        clean_chat_id = self.chat_id.strip()
+
+        telegram_url = f"https://api.telegram.org/bot{clean_token}/sendMessage"
+        payload = {
+            "chat_id": clean_chat_id,
+            "text": text,
+            "disable_web_page_preview": False
+        }
+
+        try:
+            response = requests.post(telegram_url, json=payload, timeout=10)
+            if response.status_code == 200:
+                print("Successfully sent notification message to Telegram!")
+                return {"status": "success"}
+            else:
+                print(f"Telegram API Error ({response.status_code}): {response.text}")
+                return {"status": "error", "error": response.text}
+        except Exception as e:
+            print(f"Failed to send Telegram message: {e}")
+            return {"status": "exception", "error": str(e)}
 
     def send_daily_digest(self, issues: List[Issue], limit: int = 3) -> Dict[str, Any]:
         """Format and send the top N daily issues to Telegram."""
@@ -60,7 +90,6 @@ class TelegramClient:
                 return {"status": "success"}
             else:
                 print(f"Telegram API Error ({response.status_code}): {response.text}")
-                print(f"[Debug Tip] Verify TELEGRAM_BOT_TOKEN in GitHub Secrets (e.g., 7123456789:AAFg...) and TELEGRAM_CHAT_ID.")
                 return {"status": "error", "error": response.text}
         except Exception as e:
             print(f"Failed to send Telegram message: {e}")
