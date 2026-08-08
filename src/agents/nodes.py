@@ -48,13 +48,19 @@ def _load_repos_config() -> dict:
 
 
 DUMMY_TITLE_KEYWORDS = [
-    "anime quote", "trivia question", "grammar point",
+    "anime quote", "trivia question", "grammar point", "proverb", "japan fact",
+    "video game quote", "quote ", "trivia ", "fact ", "add new theme:",
     "typo in readme", "update readme line", "bump version", "translation", "add note line", "community note"
 ]
 
 def _is_dummy_issue(item: dict) -> bool:
     """Filter out non-engineering trivia, quote, or typo-only issues."""
     title = (item.get("title") or "").lower()
+    repo = (item.get("repository") or "").lower()
+
+    if "kana-dojo" in repo or "lingdojo" in repo:
+        return True
+
     return any(kw in title for kw in DUMMY_TITLE_KEYWORDS)
 
 
@@ -215,6 +221,10 @@ Return your response strictly as JSON with this schema:
     )
 
     for item in raw_issues:
+        if _is_dummy_issue(item):
+            print(f"[Info] Skipping dummy trivia/quote issue: {item.get('title')}")
+            continue
+
         score = 50
 
         if llm:
