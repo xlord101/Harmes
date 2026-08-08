@@ -38,7 +38,7 @@ class GitHubClient:
             "good first issue", "good-first-issue", "help wanted", "easy", "beginner", "starter", "first-timers-only"
         ]
 
-        if global_search_first:
+        if global_search_first or not target_repos:
             print(f"[Info] Running primary global GitHub search for labels: {labels[:3]}...")
             global_issues = self._search_issues_global(limit=limit, labels=labels)
             for issue in global_issues:
@@ -76,6 +76,32 @@ class GitHubClient:
 
         return issues_data[:limit]
 
+    def verify_issue_still_open(self, issue_url: str) -> bool:
+        """Verify if a specific issue URL is still open and unassigned on GitHub."""
+        try:
+            parts = issue_url.rstrip("/").split("/")
+            if "issues" in parts:
+                idx = parts.index("issues")
+                owner = parts[idx - 2]
+                repo = parts[idx - 1]
+                number = parts[idx + 1]
+
+                api_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{number}"
+                headers = {"Accept": "application/vnd.github+json"}
+                if self.token:
+                    headers["Authorization"] = f"Bearer {self.token}"
+
+                resp = requests.get(api_url, headers=headers, timeout=5)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # Return True only if issue is open and unassigned
+                    is_open = data.get("state") == "open"
+                    has_assignee = data.get("assignee") is not None
+                    return is_open and not has_assignee
+        except Exception as e:
+            print(f"[Warning] Could not verify issue status for {issue_url}: {e}")
+        return True
+
     def _fetch_issues_for_repo(
         self, repo_name: str, limit_per_repo: int = 5, difficulty_levels: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
@@ -93,7 +119,7 @@ class GitHubClient:
             if response.status_code == 200:
                 count = 0
                 for item in response.json():
-                    if "pull_request" in item:
+                    if "pull_request" in item or item.get("assignee") is not None:
                         continue
                     issue_labels = {l["name"].lower() for l in item.get("labels", [])}
                     if target_labels and not issue_labels.intersection(target_labels):
@@ -158,4 +184,3 @@ class GitHubClient:
             print(f"Failed to fetch global GitHub search issues: {e}")
 
         return issues_data
-

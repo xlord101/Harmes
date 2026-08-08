@@ -247,16 +247,32 @@ Return your response strictly as JSON with this schema:
 
 def generate_linkedin_post(state: AgentState) -> dict:
     """Generate structured LinkedIn post draft for the top evaluated issues."""
-    print("--- [Generator Node] Generating LinkedIn post draft ---")
     db_client = MongoDBClient()
-    top_issues_docs = db_client.get_top_unpublished_issues(limit=5)
+    gh_client = GitHubClient()
+
+    # Query top 15 candidate issues and verify live open status
+    candidate_docs = db_client.get_top_unpublished_issues(limit=15)
+    verified_docs = []
+
+    for doc in candidate_docs:
+        url = doc.get("url", "")
+        if gh_client.verify_issue_still_open(url):
+            verified_docs.append(doc)
+            if len(verified_docs) >= 5:
+                break
+        else:
+            print(f"[Info] Pruning closed/assigned issue from candidate pool: {doc.get('title')}")
+            if doc.get("issue_id"):
+                db_client.mark_as_published([doc.get("issue_id")])
+
+    top_issues_docs = verified_docs
 
     if not top_issues_docs:
         eval_issues = state.get("evaluated_issues", [])
-        top_issues_docs = [issue.model_dump() for issue in eval_issues[:5]]
+        top_issues_docs = [issue.model_dump() for issue in eval_issues if gh_client.verify_issue_still_open(issue.url)][:5]
 
     if not top_issues_docs:
-        print("[Info] No unpublished issues found in DB or State. Executing live scrape & evaluate fallback...")
+        print("[Info] No active unpublished issues found in DB or State. Executing live scrape & evaluate fallback...")
         try:
             scraped_state = scrape_github_issues(state)
             eval_state = evaluate_and_score_issues(scraped_state)
